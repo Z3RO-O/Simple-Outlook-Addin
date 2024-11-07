@@ -7,6 +7,14 @@ This Contains slightly modified and simpler version of Addin which has only task
 ## Summary
 
 Learn how to build the simplest Office Add-in with only a manifest, HTML web page, and a logo. This sample will help you understand the fundamental parts of an Office Add-in.
+- Generate a new Addin using `office Yeoman generator`.
+- Select `Office Add-in Task Pane project`
+
+### https Directory
+
+Office Add-ins should use HTTPS, not HTTP, even while you're developing.
+This directory contains cerificates which are required to run outlook-addin in local.
+
 
 ### Manifest
 
