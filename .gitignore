@@ -26,6 +26,8 @@ build/
 .cache/
 .next/
 
+.DS_Store 
+
 # IDE-specific settings (e.g., VS Code)
 .vscode/
 .idea/

@@ -1,7 +1,7 @@
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
     document.getElementById("btn").onclick = run;
-    document.getElementById("file-upload").onchange = previewImage;
+    // document.getElementById("file-upload").onchange = previewImage;
   }
 });
 
@@ -19,43 +19,75 @@ async function run() {
 
     const bodyContainer = document.getElementById("body");
 
+    await Promise.all([
+      retrieveEmailBody(item, bodyContainer),
+      retrieveAttachments(item)
+    ]);
+
+    loadingIndicator.style.display = "none";
+    buttonViewWhileLoading.style.display = "block";
+  } catch (error) {
+    console.error("Error extracting email data:", error);
+    loadingIndicator.style.display = "none";
+    buttonViewWhileLoading.style.display = "block";
+  }
+}
+
+function retrieveEmailBody(item, bodyContainer) {
+  return new Promise((resolve, reject) => {
     if (item.body) {
       item.body.getAsync(Office.CoercionType.Text, (result) => {
-        loadingIndicator.style.display = "none";
-        buttonViewWhileLoading.style.display = "block";
-
         if (result.status === Office.AsyncResultStatus.Succeeded) {
           bodyContainer.textContent = result.value || "No body content";
+          resolve();
         } else {
           bodyContainer.textContent = "Unable to retrieve body content";
+          reject("Failed to retrieve body content");
         }
       });
     } else {
       bodyContainer.textContent = "No body content";
-      loadingIndicator.style.display = "none";
-      buttonViewWhileLoading.style.display = "block";
+      resolve();
     }
-  } catch (error) {
-    console.error("Error extracting email data:", error);
-    loadingIndicator.style.display = "none";
-  }
+  });
 }
 
-function previewImage(event) {
-  const file = event.target.files[0];
+function retrieveAttachments(item) {
+  return new Promise((resolve, reject) => {
+    const attachments = item.attachments;
+
+    if (attachments && attachments.length > 0) {
+      const imageAttachments = attachments.filter(att => att.contentType && att.contentType.startsWith("image/"));
+
+      if (imageAttachments.length > 0) {
+        // Process each image attachment
+        const attachmentPromises = imageAttachments.map(att => 
+          item.getAttachmentContentAsync(att.id, (result) => {
+            if (result.status === Office.AsyncResultStatus.Succeeded && result.value) {
+              displayAttachment(result.value.content, result.value.format);
+            }
+          })
+        );
+
+        // Wait until all image attachments are processed
+        Promise.all(attachmentPromises).then(resolve).catch(reject);
+      } else {
+        resolve(); // No image attachments to process
+      }
+    } else {
+      resolve(); // No attachments in the email
+    }
+  });
+}
+
+function displayAttachment(content, format) {
   const preview = document.getElementById("image-preview");
+  preview.style.display = "block";
 
-  if (file && file.type.startsWith("image/")) {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      preview.src = e.target.result;
-      preview.style.display = "block";
-    };
-
-    reader.readAsDataURL(file);
-  } else {
-    alert("Please upload a valid image file.");
-    preview.style.display = "none";
+  // Format can be "base64" or "url"
+  if (format === Office.MailboxEnums.AttachmentContentFormat.Base64) {
+    preview.src = `data:image/png;base64,${content}`;
+  } else if (format === Office.MailboxEnums.AttachmentContentFormat.Url) {
+    preview.src = content;
   }
 }
