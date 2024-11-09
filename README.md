@@ -4,6 +4,10 @@ This Contains slightly modified and simpler version of Addin which has only task
 
 [Original Source](https://github.com/OfficeDev/Office-Add-in-samples/tree/main/Samples/hello-world/outlook-hello-world)
 
+## Design
+
+![alt text](images/image.png)
+
 ## Summary
 
 Learn how to build the simplest Office Add-in with only a manifest, HTML web page, and a logo. This sample will help you understand the fundamental parts of an Office Add-in.
